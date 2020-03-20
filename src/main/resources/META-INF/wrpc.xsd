@@ -1,0 +1,91 @@
+<?xml version="1.0"?>
+
+<xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema"
+           targetNamespace="https://www.wdw87.com/schema/wrpc"
+           xmlns="https://www.wdw87.com/schema/wrpc"
+           elementFormDefault="qualified">
+
+    <!-- 应用 -->
+    <xsd:element name="application">
+        <xsd:complexType>
+            <!--应用ID-->
+            <xsd:attribute name="id" type="xsd:string" fixed="application"/>
+            <!--应用名称-->
+            <xsd:attribute name="name" type="xsd:string" use="required"/>
+        </xsd:complexType>
+    </xsd:element>
+
+    <xsd:element name="server">
+            <xsd:complexType>
+                <xsd:attribute name="id" type="xsd:string" fixed="server"/>
+                <xsd:attribute name="port" type="xsd:string" use="required"/>
+            </xsd:complexType>
+    </xsd:element>
+
+    <xsd:element name="registry">
+        <xsd:complexType>
+            <xsd:attribute name="id" type="xsd:string" fixed="registry"/>
+            <xsd:attribute name="registry_address" type="xsd:string" use="required"/>
+            <xsd:attribute name="zk_path" type="xsd:string" default="/wrpc"/>
+            <xsd:attribute name="session_timeout" type="xsd:int" default="10000"/>
+            <xsd:attribute name="connection_timeout" type="xsd:int" default="10000"/>
+        </xsd:complexType>
+    </xsd:element>
+
+    <xsd:element name="service">
+        <xsd:complexType>
+            <xsd:attribute name="id" type="xsd:string" use="required"/>
+            <xsd:attribute name="name" type="xsd:string" use="required"/>
+            <xsd:attribute name="ref" type="xsd:string" use="required"/>
+            <xsd:attribute name="impl" type="xsd:string"/>
+        </xsd:complexType>
+    </xsd:element>
+
+    <!-- 客户端 -->
+    <xsd:element name="client">
+        <xsd:complexType>
+            <!-- 客户端ID -->
+            <xsd:attribute name="id" type="xsd:string" fixed="client"/>
+            <!-- 负载均衡 -->
+            <xsd:attribute name="load_balance" default="random">
+                <xsd:simpleType>
+                    <xsd:restriction base="xsd:string">
+                        <!--随机-->
+                        <xsd:enumeration value="random"/>
+                    </xsd:restriction>
+                </xsd:simpleType>
+            </xsd:attribute>
+            <!--代理-->
+            <xsd:attribute name="proxy" default="jdk">
+                <xsd:simpleType>
+                    <xsd:restriction base="xsd:string">
+                        <!--jdk-->
+                        <xsd:enumeration value="jdk"/>
+                        <!--cglib-->
+                        <xsd:enumeration value="cglib"/>
+                    </xsd:restriction>
+                </xsd:simpleType>
+            </xsd:attribute>
+        </xsd:complexType>
+    </xsd:element>
+
+    <!-- 引用 -->
+    <xsd:element name="reference">
+        <xsd:complexType>
+            <!-- ID -->
+            <xsd:attribute name="id" type="xsd:string" use="required"/>
+            <!-- 服务接口名称 -->
+            <xsd:attribute name="name" type="xsd:string" use="required"/>
+<!--            &lt;!&ndash; 版本 &ndash;&gt;-->
+<!--            <xsd:attribute name="version" type="xsd:string"/>-->
+            <!-- 超时毫秒数 -->
+            <xsd:attribute name="timeout" type="xsd:int" default="10000"/>
+<!--            &lt;!&ndash; 定向服务IP &ndash;&gt;-->
+<!--            <xsd:attribute name="direct_server_ip" type="xsd:string"/>-->
+<!--            &lt;!&ndash; 定向服务端口 &ndash;&gt;-->
+<!--            <xsd:attribute name="direct_server_port" type="xsd:string"/>-->
+        </xsd:complexType>
+    </xsd:element>
+
+
+</xsd:schema>

@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xmlns:wrpc="https://www.wdw87.com/schema/wrpc"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans
+       http://www.springframework.org/schema/beans/spring-beans.xsd
+       https://www.wdw87.com/schema/wrpc
+       https://www.wdw87.com/schema/wrpc/wrpc.xsd
+">
+    <wrpc:application name="rpc_provider"/>
+    <wrpc:server port="8000" />
+    <wrpc:registry registry_address="123.57.175.207:2181" connection_timeout="20000" session_timeout="20000"/>
+
+
+    <wrpc:service id="calculate" name="com.wdw.wrpc.service.CalculateInterFace" ref="CalculateInterFaceImpl"/>
+    <bean name="CalculateInterFaceImpl" class="com.wdw.wrpc.service.impl.CalculateImpl"/>
+    <wrpc:service id = "multiply" name="com.wdw.wrpc.service.MultiplyInterface" ref="MultiplyImpl"/>
+    <bean name="MultiplyImpl" class="com.wdw.wrpc.service.impl.MultiplyImpl"/>
+</beans>
