@@ -2,8 +2,10 @@ package com.wdw.wrpc.client.proxy.impl;
 
 
 import com.wdw.wrpc.client.loadbalance.LoadBalance;
+import com.wdw.wrpc.client.loadbalance.impl.LoadBalanceManager;
 import com.wdw.wrpc.client.netty.ClientManager;
 import com.wdw.wrpc.client.netty.NettyClient;
+import com.wdw.wrpc.client.registry.Invoker;
 import com.wdw.wrpc.client.registry.ServiceDiscovery;
 import com.wdw.wrpc.common.protocal.ServiceResponsePacket;
 import com.wdw.wrpc.common.protocal.ServiceRequestPacket;
@@ -49,17 +51,18 @@ public class InvokerInterceptor implements MethodInterceptor {
 //        requestPacket.setArgs(objects);
 
         //负载均衡
-        List<String> list = serviceDiscovery.getServerList(clazz.getName());
-        String serverAddress = LoadBalance.getAddress(list);
+        List<Invoker> invokers = serviceDiscovery.getServerList(clazz.getName());
+        Invoker invoker = LoadBalanceManager.getInstance().select(invokers, requestPacket);
 
-        NettyClient client = ClientManager.getInstance().getClient(serverAddress);
+        NettyClient client = ClientManager.getInstance().getClient(invoker.getAddress());
 
         ServiceResponsePacket responsePacket = (ServiceResponsePacket)client.send(requestPacket);
 
-        if(responsePacket.getCode() == 0){
+        if(responsePacket.getCode() == 0) {
+            log.info("invoke success, remote:{} , load balance: {}",invoker.getAddress(),LoadBalanceManager.currLoadBalance);
             return responsePacket.getData();
         }else{
-            log.error(responsePacket.getMessage());
+            log.error("invoke error ! code: " + responsePacket.getCode() + ". error info: " + responsePacket.getMessage());
             return null;
         }
 

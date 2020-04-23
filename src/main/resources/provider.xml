@@ -8,7 +8,7 @@
        https://www.wdw87.com/schema/wrpc/wrpc.xsd
 ">
     <wrpc:application name="rpc_provider"/>
-    <wrpc:server port="8000" />
+    <wrpc:server port="8000" weight="90"/>
     <wrpc:registry registry_address="123.57.175.207:2181" connection_timeout="20000" session_timeout="20000"/>
 
 

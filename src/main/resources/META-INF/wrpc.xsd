@@ -51,8 +51,10 @@
             <xsd:attribute name="load_balance" default="random">
                 <xsd:simpleType>
                     <xsd:restriction base="xsd:string">
-                        <!--随机-->
+                        <!--权重随机-->
                         <xsd:enumeration value="random"/>
+                        <!--随机一致性hash-->
+                        <xsd:enumeration value="hash"/>
                     </xsd:restriction>
                 </xsd:simpleType>
             </xsd:attribute>

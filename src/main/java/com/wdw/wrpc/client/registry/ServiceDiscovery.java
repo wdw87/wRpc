@@ -25,7 +25,7 @@ public class ServiceDiscovery {
 
     private volatile List<String> serviceList = new ArrayList<>();
 
-    private ConcurrentHashMap<String, List<String>> serverMap = new ConcurrentHashMap<>();
+    private ConcurrentHashMap<String, List<Invoker>> serverMap = new ConcurrentHashMap<>();
 
     private ZkClient zkClient;
 
@@ -120,9 +120,13 @@ public class ServiceDiscovery {
             e.printStackTrace();
         }
         log.info("发现服务器列表" + serverList);
-        serverMap.put(service, serverList);
-        log.info("引用服务获取完成[" + path + "]:" + service);
-        ;
+        if(serverList == null){
+            log.error("服务[" + service + "] 找不到服务列表");
+        }else {
+            serverMap.put(service, toInvokers(service, serverList));
+            log.info("引用服务获取完成[" + path + "]:" + service);
+        }
+
     }
 
 
@@ -133,17 +137,27 @@ public class ServiceDiscovery {
             @Override
             public void handleChildChange(String parentPath, List<String> currentChilds) throws Exception {
                 serverMap.remove(service);
-                serverMap.put(service, currentChilds);
+                serverMap.put(service, toInvokers(service, currentChilds));
                 log.info("服务[{}]发生变化，当前服务节点为{}", service, currentChilds);
             }
         });
     }
 
-    public ConcurrentHashMap<String, List<String>> getServerMap() {
+    private List<Invoker> toInvokers(String service, List<String> addressList){
+        List<Invoker> invokers = new ArrayList<>();
+        for(String address : addressList){
+            String path = ZK_REGISTRY_PATH + "/" + service + "/providers" + "/" + address;
+            int weight = zkClient.readData(path);
+            invokers.add(new Invoker(address, weight));
+        }
+        return invokers;
+    }
+
+    public ConcurrentHashMap<String, List<Invoker>> getServerMap() {
         return serverMap;
     }
 
-    public List<String> getServerList(String service) {
+    public List<Invoker> getServerList(String service) {
         if (serverMap.containsKey(service)) {
             return serverMap.get(service);
         }

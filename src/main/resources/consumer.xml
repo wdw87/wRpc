@@ -9,7 +9,7 @@
 ">
     <wrpc:application name="rpc_consumer"/>
 
-    <wrpc:client load_balance="random" proxy="cglib"/>
+    <wrpc:client load_balance="hash" proxy="cglib"/>
 
     <wrpc:registry registry_address="123.57.175.207:2181" connection_timeout="20000" session_timeout="20000"/>
 
