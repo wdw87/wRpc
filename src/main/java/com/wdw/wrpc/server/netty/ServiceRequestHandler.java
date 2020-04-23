@@ -5,6 +5,8 @@ import com.wdw.wrpc.config.ServiceConfig;
 import com.wdw.wrpc.common.protocal.ServiceRequestPacket;
 import com.wdw.wrpc.common.protocal.ServiceResponsePacket;
 import com.wdw.wrpc.common.util.SpringUtil;
+import com.wdw.wrpc.server.dispatcher.ChannelEventRunnable;
+import com.wdw.wrpc.server.dispatcher.Dispatcher;
 import io.netty.channel.ChannelHandler;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.SimpleChannelInboundHandler;
@@ -23,7 +25,7 @@ public class ServiceRequestHandler extends SimpleChannelInboundHandler<ServiceRe
 
     public static final ServiceRequestHandler INSTANCE = new ServiceRequestHandler();
 
-    private ServiceInvoker serviceInvoker = ServiceInvoker.INSTANCE;
+    private Dispatcher dispatcher = Dispatcher.getInstance();
 
     @Override
     public void channelActive(ChannelHandlerContext ctx) throws Exception {
@@ -33,40 +35,10 @@ public class ServiceRequestHandler extends SimpleChannelInboundHandler<ServiceRe
 
     @Override
     protected void channelRead0(ChannelHandlerContext channelHandlerContext, ServiceRequestPacket serviceRequest) throws Exception {
-        ServiceResponsePacket responsePacket = new ServiceResponsePacket();
-
-        //设置相应id
-        responsePacket.setRequestId(serviceRequest.getId());
-
-        ApplicationContext context = SpringUtil.getApplicationContext();
-        Map<String, ServiceConfig> map = context.getBeansOfType(ServiceConfig.class);
-
-        Set<String> keySet = map.keySet();
-
-        ServiceConfig serviceConfig = null;
-        for (String key : keySet) {
-            if (map.get(key).getName().equals(serviceRequest.getClassName())) {
-                serviceConfig = map.get(key);
-                break;
-            }
-        }
-
-        if (serviceConfig == null) {
-            log.info("No such service : " + serviceRequest);
-            responsePacket.setCode(1);
-            responsePacket.setMessage("No such service");
-        } else {
-            //获取服务的实现类
-            Object object = context.getBean(serviceConfig.getRef());
-            Method method = object.getClass().getMethod(serviceRequest.getMethodName(), serviceRequest.getParameterTypes());
-            Object result = serviceInvoker.invoke(object, method, serviceRequest);
-            log.info("service id : " + serviceRequest.getId());
-            log.info("Service invoked : " + serviceRequest);
-            responsePacket.setCode(0);
-            responsePacket.setData(result);
-        }
-
-        channelHandlerContext.channel().writeAndFlush(responsePacket);
+        /**
+         * 将事件分发到线程池上执行
+         */
+        dispatcher.execute(new ChannelEventRunnable(channelHandlerContext.channel(), serviceRequest));
 
     }
 
