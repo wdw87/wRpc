@@ -2,6 +2,7 @@ package com.wdw.wrpc.client.proxy.impl;
 
 
 import com.wdw.wrpc.client.loadbalance.LoadBalance;
+import com.wdw.wrpc.client.netty.ClientManager;
 import com.wdw.wrpc.client.netty.NettyClient;
 import com.wdw.wrpc.client.registry.ServiceDiscovery;
 import com.wdw.wrpc.common.protocal.ServiceResponsePacket;
@@ -21,7 +22,7 @@ public class InvokerInterceptor implements MethodInterceptor {
 
     private ServiceDiscovery serviceDiscovery = ServiceDiscovery.getInstance();
 
-    private NettyClient client = null;
+//    private NettyClient client = null;
 
     public InvokerInterceptor(Class<?> clazz){
         this.clazz = clazz;
@@ -47,13 +48,11 @@ public class InvokerInterceptor implements MethodInterceptor {
 //
 //        requestPacket.setArgs(objects);
 
-        if(client == null) {
-            //负载均衡
-            List<String> list = serviceDiscovery.getServerList(clazz.getName());
-            String serverAddress = LoadBalance.getAddress(list);
-            String[] address = serverAddress.split(":");
-            client = new NettyClient(address[0], Integer.parseInt(address[1]));
-        }
+        //负载均衡
+        List<String> list = serviceDiscovery.getServerList(clazz.getName());
+        String serverAddress = LoadBalance.getAddress(list);
+
+        NettyClient client = ClientManager.getInstance().getClient(serverAddress);
 
         ServiceResponsePacket responsePacket = (ServiceResponsePacket)client.send(requestPacket);
 

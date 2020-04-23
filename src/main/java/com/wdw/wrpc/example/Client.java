@@ -20,5 +20,7 @@ public class Client {
 
         MultiplyInterface bean1 = (MultiplyInterface)SpringUtil.getApplicationContext().getBean("multiply");
         System.out.println(bean1.multiply(3.5,5.5));
+
+        System.out.println(bean.dec(11,12));
     }
 }

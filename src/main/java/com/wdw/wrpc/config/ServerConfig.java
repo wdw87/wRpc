@@ -8,11 +8,12 @@ import org.springframework.beans.factory.InitializingBean;
 public class ServerConfig implements InitializingBean {
     private String id;
     private int port;
+    private int weight;
 
     @Override
     public void afterPropertiesSet() throws Exception {
         new Thread(()->{
-            NettyServer nettyServer = new NettyServer(port);
+            NettyServer nettyServer = new NettyServer(port, weight);
             nettyServer.start();
         }).start();
     }

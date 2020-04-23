@@ -13,6 +13,7 @@ public class ServiceRegistry {
     //    private static String registryAddress = "127.0.0.1:2181,127.0.0.1:2182,127.0.0.1:2183";
     private String registryAddress = "123.57.175.207:2181";
     private String myAddress = "127.0.0.1:8000";
+    private int weight = 100;
     private String zkPath = "/wrpc";
     private int sessionTimeout = 10000;
     private int connectionTimeout = 10000;
@@ -34,6 +35,7 @@ public class ServiceRegistry {
     public void setRegistryParams(ServerConfig serverConfig, RegistryConfig registryConfig){
         this.registryAddress = registryConfig.getRegistryAddress();
         this.myAddress = RpcContext.getLocalIp() + ":" + serverConfig.getPort();
+        this.weight = serverConfig.getWeight();
         this.zkPath = registryConfig.getZkPath();
         this.sessionTimeout = registryConfig.getSessionTimeout();
         this.connectionTimeout = registryConfig.getConnectionTimeout();
@@ -69,7 +71,7 @@ public class ServiceRegistry {
             if(zkClient.exists(path)) {
                 zkClient.delete(path);
             }
-            zkClient.createEphemeral(path);
+            zkClient.createEphemeral(path, weight);
             log.info("注册了服务：" + path);
         } else {
             log.warn("zookeeper客户端未初始化");

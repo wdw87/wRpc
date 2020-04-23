@@ -24,7 +24,7 @@ import java.util.concurrent.TimeUnit;
 @NoArgsConstructor
 public class NettyServer {
     private int port;
-
+    private int weight;
 
     //服务交由spring管理了,在bean初始化完毕后直接在spring中注册
 //    private ServiceManager serviceManager;
@@ -35,10 +35,10 @@ public class NettyServer {
     private NioEventLoopGroup workerGroup;
     private ServiceRequestHandler serviceRequestHandler = ServiceRequestHandler.INSTANCE;
 
-    public NettyServer(int port) {
+    public NettyServer(int port, int weight) {
 
         this.port = port;
-
+        this.weight = weight;
     }
 
     public void start(){
