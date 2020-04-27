@@ -22,7 +22,7 @@ public class Dispatcher {
         return SingletonHolder.instance;
     }
 
-    private final ExecutorService executorService = Executors.newCachedThreadPool();
+    private ExecutorService executorService = Executors.newCachedThreadPool();
 
     public void execute(ChannelEventRunnable channelEventRunnable){
         executorService.execute(channelEventRunnable);
