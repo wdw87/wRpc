@@ -34,7 +34,7 @@ public class ServiceRegistry {
 
     public void setRegistryParams(ServerConfig serverConfig, RegistryConfig registryConfig){
         this.registryAddress = registryConfig.getRegistryAddress();
-        this.myAddress = RpcContext.getLocalIp() + ":" + serverConfig.getPort();
+        this.myAddress = serverConfig.getIp() + ":" + serverConfig.getPort();
         this.weight = serverConfig.getWeight();
         this.zkPath = registryConfig.getZkPath();
         this.sessionTimeout = registryConfig.getSessionTimeout();

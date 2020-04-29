@@ -7,6 +7,7 @@ import org.springframework.beans.factory.InitializingBean;
 @Data
 public class ServerConfig implements InitializingBean {
     private String id;
+    private String ip;
     private int port;
     private int weight;
 

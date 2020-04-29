@@ -18,6 +18,7 @@
     <xsd:element name="server">
             <xsd:complexType>
                 <xsd:attribute name="id" type="xsd:string" fixed="server"/>
+                <xsd:attribute name="ip" type="xsd:string" use="required"/>
                 <xsd:attribute name="port" type="xsd:string" use="required"/>
                 <xsd:attribute name="weight" type="xsd:int" default="100"/>
             </xsd:complexType>
