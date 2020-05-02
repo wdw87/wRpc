@@ -26,15 +26,18 @@ public class ClientManager {
 
     public NettyClient getClient(String address){
         lock.lock();
-        if(!clientMap.containsKey(address) || clientMap.get(address) == null){
-            String[] adds = address.split(":");
-            String ip = adds[0];
-            int port = Integer.parseInt(adds[1]);
-            log.info("A new netty client created [" + address + "]");
-            NettyClient newClient = new NettyClient(ip, port);
-            clientMap.put(address, newClient);
+        try {
+            if(!clientMap.containsKey(address) || clientMap.get(address) == null){
+                String[] adds = address.split(":");
+                String ip = adds[0];
+                int port = Integer.parseInt(adds[1]);
+                log.info("A new netty client created [" + address + "]");
+                NettyClient newClient = new NettyClient(ip, port);
+                clientMap.put(address, newClient);
+            }
+        } finally {
+            lock.unlock();
         }
-        lock.unlock();
         return clientMap.get(address);
     }
 }
