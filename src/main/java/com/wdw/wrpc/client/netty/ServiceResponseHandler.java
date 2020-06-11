@@ -19,6 +19,11 @@ public class ServiceResponseHandler extends SimpleChannelInboundHandler<ServiceR
 
 
     private Map<String, SynchronousQueue<Object>> queueMap = new ConcurrentHashMap<>();
+    private NettyClient client = null;
+
+    public ServiceResponseHandler(NettyClient client) {
+        this.client = client;
+    }
 
     @Override
     public void channelActive(ChannelHandlerContext ctx) throws Exception {
@@ -44,6 +49,7 @@ public class ServiceResponseHandler extends SimpleChannelInboundHandler<ServiceR
     public void channelInactive(ChannelHandlerContext ctx) throws Exception {
         log.info("Client disconnected.");
         super.channelInactive(ctx);
+        client.close();
     }
 
     public SynchronousQueue<Object> sendRequest(ServiceRequestPacket requestPacket, Channel channel){

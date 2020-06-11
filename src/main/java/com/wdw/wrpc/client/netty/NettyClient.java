@@ -34,9 +34,13 @@ public class NettyClient {
 
     private ServiceDiscovery serviceDiscovery = ServiceDiscovery.getInstance();
 
-    private ServiceResponseHandler serviceResponseHandler = new ServiceResponseHandler();
+    private ServiceResponseHandler serviceResponseHandler = new ServiceResponseHandler(this);
 
     private Channel channel;
+
+    private NioEventLoopGroup workerGroup = null;
+
+    private ClientManager clientManager = ClientManager.getInstance();
 
     public NettyClient(String host, int port) {
 
@@ -45,7 +49,7 @@ public class NettyClient {
 
         bootstrap = new Bootstrap();
 
-        NioEventLoopGroup workerGroup = new NioEventLoopGroup();
+        workerGroup = new NioEventLoopGroup();
 
         bootstrap.group(workerGroup)
                 .channel(NioSocketChannel.class)
@@ -98,6 +102,10 @@ public class NettyClient {
             return responsePacket;
         }
 
+    }
+    public void close(){
+        clientManager.removeClient(host + ":" + port);
+        workerGroup.shutdownGracefully();
     }
 
     /**

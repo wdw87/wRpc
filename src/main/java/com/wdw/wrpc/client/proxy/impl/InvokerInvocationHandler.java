@@ -1,71 +1,23 @@
 package com.wdw.wrpc.client.proxy.impl;
 
 
-import com.wdw.wrpc.client.loadbalance.LoadBalance;
-import com.wdw.wrpc.client.loadbalance.impl.LoadBalanceManager;
-import com.wdw.wrpc.client.netty.ClientManager;
-import com.wdw.wrpc.client.netty.NettyClient;
-import com.wdw.wrpc.client.registry.Invoker;
+import com.wdw.wrpc.client.proxy.InvokerHandler;
 import com.wdw.wrpc.client.registry.ServiceDiscovery;
-import com.wdw.wrpc.common.protocal.ServiceRequestPacket;
-import com.wdw.wrpc.common.protocal.ServiceResponsePacket;
-import com.wdw.wrpc.common.util.IDUtil;
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
 
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
-import java.util.List;
 
 @Slf4j
-@Data
-public class InvokerInvocationHandler implements InvocationHandler {
-    private Class<?> clazz;
-
-//    private NettyClient client = null;
-    private ServiceDiscovery serviceDiscovery = ServiceDiscovery.getInstance();
+public class InvokerInvocationHandler extends InvokerHandler implements InvocationHandler {
 
     public InvokerInvocationHandler(Class<?> clazz) {
-        this.clazz = clazz;
+        super(clazz);
     }
 
     @Override
     public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
-
-        ServiceRequestPacket requestPacket = new ServiceRequestPacket();
-
-        requestPacket.setId(IDUtil.getUUID());
-
-        requestPacket.setClassName(clazz.getName());
-
-        requestPacket.setMethodName(method.getName());
-
-        requestPacket.setArgs(args);
-
-        requestPacket.setParameterTypes(method.getParameterTypes());
-
-//        requestPacket.setServiceDescriptor(ServiceDescriptor.from(clazz, method));
-//
-//        requestPacket.setArgs(args);
-
-//        if(client == null) {
-//            //负载均衡
-//            String serverAddress = LoadBalance.getAddress(serviceDiscovery.getServerList(clazz.getName()));
-//            String[] address = serverAddress.split(":");
-//            client = new NettyClient(address[0], Integer.parseInt(address[1]));
-//        }
-        List<Invoker> invokers = serviceDiscovery.getServerList(clazz.getName());
-        Invoker invoker = LoadBalanceManager.getInstance().select(invokers, requestPacket);
-
-        NettyClient client = ClientManager.getInstance().getClient(invoker.getAddress());
-
-        ServiceResponsePacket responsePacket = (ServiceResponsePacket)client.send(requestPacket);
-        if(responsePacket.getCode() == 0) {
-            log.info("invoke success, remote:{} , load balance: {}",invoker.getAddress(),LoadBalanceManager.currLoadBalance);
-            return responsePacket.getData();
-        }else{
-            log.error("invoke error ! code: " + responsePacket.getCode() + ". error info: " + responsePacket.getMessage());
-            return null;
-        }
+        return doInvoke(method, args);
     }
 }
