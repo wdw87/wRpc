@@ -3,10 +3,13 @@ package com.wdw.wrpc.server.dispatcher;
 import com.wdw.wrpc.common.protocal.ServiceRequestPacket;
 import io.netty.channel.Channel;
 
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
+import java.util.concurrent.*;
+import java.util.concurrent.atomic.AtomicInteger;
 
-
+/**
+ * 服务端任务分发器
+ * 避免耗时任务在pipline中长时间停留
+ */
 public class Dispatcher {
     /**
      * Holder模式
@@ -22,10 +25,24 @@ public class Dispatcher {
         return SingletonHolder.instance;
     }
 
-    private ExecutorService executorService = Executors.newCachedThreadPool();
+    //获取CPU数量
+    private final int N_CPU = Runtime.getRuntime().availableProcessors();
+    private String workerThreadName = "wRpcWorkerThread";
+
+    //自定义线程池
+    private final ThreadPoolExecutor executor = new ThreadPoolExecutor(
+            N_CPU * 2,
+            N_CPU * 4,
+            60L,
+            TimeUnit.SECONDS,
+            new LinkedBlockingDeque<>(2400),
+            new DefaultThreadFactory(workerThreadName),
+            new ThreadPoolExecutor.CallerRunsPolicy()
+            );
 
     public void execute(ChannelEventRunnable channelEventRunnable){
-        executorService.execute(channelEventRunnable);
+        channelEventRunnable.setThreadName(workerThreadName);
+        executor.execute(channelEventRunnable);
     }
 
 }

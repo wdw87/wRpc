@@ -18,7 +18,7 @@ import java.util.concurrent.SynchronousQueue;
 public class ServiceResponseHandler extends SimpleChannelInboundHandler<ServiceResponsePacket> {
 
 
-    private Map<String, SynchronousQueue<Object>> queueMap = new ConcurrentHashMap<>();
+    private final Map<String, SynchronousQueue<Object>> queueMap = new ConcurrentHashMap<>();
     private NettyClient client = null;
 
     public ServiceResponseHandler(NettyClient client) {
@@ -48,6 +48,15 @@ public class ServiceResponseHandler extends SimpleChannelInboundHandler<ServiceR
     @Override
     public void channelInactive(ChannelHandlerContext ctx) throws Exception {
         log.info("Client disconnected.");
+        //销毁所有queueMap中等待响应的包
+        for(String id : queueMap.keySet()){
+            ServiceResponsePacket responsePacket = new ServiceResponsePacket();
+            responsePacket.setCode(-1);
+            responsePacket.setMessage("Client disconnected.");
+            responsePacket.setRequestId(id);
+            SynchronousQueue<Object> queue = queueMap.get(id);
+            queue.put(responsePacket);
+        }
         super.channelInactive(ctx);
         client.close();
     }

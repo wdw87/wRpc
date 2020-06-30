@@ -7,6 +7,7 @@ import com.wdw.wrpc.config.ServiceConfig;
 import com.wdw.wrpc.server.netty.ServiceInvoker;
 import io.netty.channel.Channel;
 import lombok.AllArgsConstructor;
+import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.ApplicationContext;
 
@@ -15,45 +16,57 @@ import java.util.Map;
 import java.util.Set;
 
 @Slf4j
-@AllArgsConstructor
+@Data
 public class ChannelEventRunnable implements Runnable{
     private Channel channel;
     private ServiceRequestPacket serviceRequest;
+    private String threadName;
+    public ChannelEventRunnable(Channel channel, ServiceRequestPacket packet){
+        this.channel = channel;
+        this.serviceRequest = packet;
+    }
+
     @Override
     public void run() {
         try {
             ServiceResponsePacket responsePacket = new ServiceResponsePacket();
+            String currThread = Thread.currentThread().getName().split("-")[0];
+            if(currThread == null || !currThread.equals(threadName)){
+                responsePacket.setRequestId(serviceRequest.getId());
+                responsePacket.setCode(5);
+                responsePacket.setMessage("Server is busy");
+            }else {
+                //设置相应id
+                responsePacket.setRequestId(serviceRequest.getId());
 
-            //设置相应id
-            responsePacket.setRequestId(serviceRequest.getId());
+                ApplicationContext context = SpringUtil.getApplicationContext();
+                Map<String, ServiceConfig> map = context.getBeansOfType(ServiceConfig.class);
 
-            ApplicationContext context = SpringUtil.getApplicationContext();
-            Map<String, ServiceConfig> map = context.getBeansOfType(ServiceConfig.class);
+                Set<String> keySet = map.keySet();
 
-            Set<String> keySet = map.keySet();
-
-            ServiceConfig serviceConfig = null;
-            for (String key : keySet) {
-                if (map.get(key).getName().equals(serviceRequest.getClassName())) {
-                    serviceConfig = map.get(key);
-                    break;
+                ServiceConfig serviceConfig = null;
+                for (String key : keySet) {
+                    if (map.get(key).getName().equals(serviceRequest.getClassName())) {
+                        serviceConfig = map.get(key);
+                        break;
+                    }
                 }
-            }
 
-            if (serviceConfig == null) {
-                log.info("No such service : " + serviceRequest);
-                responsePacket.setCode(1);
-                responsePacket.setMessage("No such service");
-            } else {
-                //获取服务的实现类
-                Object object = context.getBean(serviceConfig.getRef());
-                Method method = object.getClass().getMethod(serviceRequest.getMethodName(), serviceRequest.getParameterTypes());
-                ServiceInvoker serviceInvoker = ServiceInvoker.INSTANCE;
-                Object result = serviceInvoker.invoke(object, method, serviceRequest);
-                log.info("service id : " + serviceRequest.getId());
-                log.info("Service invoked : " + serviceRequest);
-                responsePacket.setCode(0);
-                responsePacket.setData(result);
+                if (serviceConfig == null) {
+                    log.info("No such service : " + serviceRequest);
+                    responsePacket.setCode(1);
+                    responsePacket.setMessage("No such service");
+                } else {
+                    //获取服务的实现类
+                    Object object = context.getBean(serviceConfig.getRef());
+                    Method method = object.getClass().getMethod(serviceRequest.getMethodName(), serviceRequest.getParameterTypes());
+                    ServiceInvoker serviceInvoker = ServiceInvoker.INSTANCE;
+                    Object result = serviceInvoker.invoke(object, method, serviceRequest);
+                    log.info("service id : " + serviceRequest.getId());
+                    log.info("Service invoked : " + serviceRequest);
+                    responsePacket.setCode(0);
+                    responsePacket.setData(result);
+                }
             }
 
             channel.writeAndFlush(responsePacket);

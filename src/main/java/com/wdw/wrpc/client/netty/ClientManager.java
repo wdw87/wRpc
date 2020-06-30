@@ -26,8 +26,7 @@ public class ClientManager {
 
     public NettyClient getClient(String address){
         if(!clientMap.containsKey(address) || clientMap.get(address) == null) {
-            lock.lock();
-            try {
+            synchronized (this) {
                 if (!clientMap.containsKey(address) || clientMap.get(address) == null) {
                     String[] adds = address.split(":");
                     String ip = adds[0];
@@ -36,20 +35,15 @@ public class ClientManager {
                     NettyClient newClient = new NettyClient(ip, port);
                     clientMap.put(address, newClient);
                 }
-            } finally {
-                lock.unlock();
             }
         }
         return clientMap.get(address);
     }
     public void removeClient(String address){
-        lock.lock();
-        try{
-            if(clientMap != null && clientMap.containsKey(address)) {
+        synchronized (this) {
+            if (clientMap != null && clientMap.containsKey(address)) {
                 clientMap.remove(address);
             }
-        }finally {
-            lock.unlock();
         }
     }
 }
